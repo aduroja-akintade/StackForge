@@ -60,7 +60,7 @@ create policy "Users can insert their own analyses." on analyses
 -- Saved Projects table
 create table saved_projects (
   id uuid default gen_random_uuid() primary key,
-  user_id references auth.users not null,
+  user_id uuid references auth.users(id) not null,
   title text not null,
   description text,
   tech_stack text,
