@@ -20,6 +20,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setLoading(false);
+      return;
+    }
     // Attempt to get session regardless of 'isSupabaseConfigured' check
     // to allow Supabase client to use its internal defaults/errors
     const initAuth = async () => {
@@ -48,6 +52,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = async () => {
     try {
+      if (!isSupabaseConfigured) {
+        throw new Error('Supabase authentication environment variables are missing');
+      }
       const origin = typeof window !== 'undefined' ? window.location.origin : '';
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',

@@ -1,5 +1,6 @@
 import os
 import json
+import asyncio
 import google.generativeai as genai
 from dotenv import load_dotenv
 
@@ -15,7 +16,7 @@ else:
 
 class GeminiService:
     def __init__(self):
-        self.model_name = "gemini-flash-lite-latest"
+        self.model_name = os.getenv("GEMINI_MODEL", "gemini-flash-lite-latest")
         self.model = genai.GenerativeModel(self.model_name)
 
     def _parse_ai_json(self, raw_text: str):
@@ -34,10 +35,11 @@ class GeminiService:
             cleaned_text = "\n".join(lines).strip()
         
         try:
-            return json.loads(cleaned_text)
+            value = json.loads(cleaned_text)
+            return value if isinstance(value, dict) else {"error": "Unexpected AI response format"}
         except json.JSONDecodeError as jde:
-            print(f"GeminiService: JSON Decode Error. Raw: {raw_text[:100]}...")
-            return {"error": f"Failed to parse AI response: {str(jde)}", "raw": raw_text}
+            print("GeminiService: Invalid JSON response from provider")
+            return {"error": "Invalid structured AI response"}
 
     async def analyse_job_description(self, jd_text: str):
         """
@@ -68,7 +70,7 @@ class GeminiService:
         
         try:
             print(f"GeminiService: Sending request to model {self.model_name}")
-            response = self.model.generate_content(
+            response = await asyncio.to_thread(self.model.generate_content,
                 prompt,
                 generation_config={"response_mime_type": "application/json"}
             )
@@ -92,14 +94,16 @@ class GeminiService:
         Context: {skills_context}
 
         Rank these projects from highest to lowest impact.
-        Format the output as a JSON object with a single key 'recommendations' which is a list of project objects.
+        Format the output as a JSON object with one key "recommendations", containing an array of 3-5 objects.
+        Each object MUST use exactly these fields: "title", "impact", "stack", "time", and "difficulty".
+        All values must be concise strings, without markdown fences.
 
         Job Description:
         {jd_text}
         """
         
         try:
-            response = self.model.generate_content(
+            response = await asyncio.to_thread(self.model.generate_content,
                 prompt,
                 generation_config={"response_mime_type": "application/json"}
             )
@@ -130,11 +134,13 @@ class GeminiService:
         4. Verification: Provide exact commands or tests to verify that each stage is working correctly.
 
         FORMAT: Return ONLY a valid JSON object with these keys: 
-        'architecture_overview', 'detailed_file_structure', 'step_by_step_plan', 'verification_checklist'.
+        "architecture_overview", "detailed_file_structure", "step_by_step_plan", "verification_checklist".
+        step_by_step_plan MUST be an array of objects with "phase", "action", "command", and "logic_explanation".
+        verification_checklist MUST be an array of strings.
         """
         
         try:
-            response = self.model.generate_content(
+            response = await asyncio.to_thread(self.model.generate_content,
                 prompt,
                 generation_config={"response_mime_type": "application/json"}
             )
@@ -161,13 +167,14 @@ class GeminiService:
         4. Performance & Scalability: (Caching, CDN, Database indexing).
 
         FORMAT: Return a JSON object with:
-        'current_state_gap_analysis': 'What is missing for production?',
-        'critical_upgrades': 'List of mandatory high-priority changes',
-        'implementation_roadmap': 'Step-by-step guide to applying these upgrades including CLI/Tooling suggestions'.
+        "analysis": ["gap 1", "gap 2"],
+        "senior_additions": ["specific improvement 1", "specific improvement 2"],
+        "upgrade_steps": ["ordered step 1", "ordered step 2"].
+        All three fields MUST contain arrays of strings.
         """
         
         try:
-            response = self.model.generate_content(
+            response = await asyncio.to_thread(self.model.generate_content,
                 prompt,
                 generation_config={"response_mime_type": "application/json"}
             )
