@@ -1,22 +1,21 @@
-from pydantic import BaseModel
-from typing import List, Optional
+"""Validated request models. The authenticated identity always comes from the JWT."""
+from pydantic import BaseModel, ConfigDict, Field
 
-class JobDescriptionRequest(BaseModel):
-    jd_text: str
-    user_id: Optional[str] = None
+class SafeRequest(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
-class ProjectRecommendationRequest(BaseModel):
-    jd_text: str
-    current_skills: Optional[List[str]] = None
-    user_id: Optional[str] = None
+class JobDescriptionRequest(SafeRequest):
+    jd_text: str = Field(min_length=20, max_length=10000)
 
-class ImplementationPlanRequest(BaseModel):
-    project_title: str
-    project_description: Optional[str] = None
-    tech_stack: Optional[str] = None
-    user_id: Optional[str] = None
+class ProjectRecommendationRequest(SafeRequest):
+    jd_text: str = Field(min_length=20, max_length=10000)
+    current_skills: list[str] | None = Field(default=None, max_length=30)
 
-class ProjectUpgradeRequest(BaseModel):
-    project_description: str
-    current_tech_stack: Optional[str] = None
-    user_id: Optional[str] = None
+class ImplementationPlanRequest(SafeRequest):
+    project_title: str = Field(min_length=3, max_length=150)
+    project_description: str | None = Field(default=None, max_length=4000)
+    tech_stack: str | None = Field(default=None, max_length=500)
+
+class ProjectUpgradeRequest(SafeRequest):
+    project_description: str = Field(min_length=20, max_length=6000)
+    current_tech_stack: str | None = Field(default=None, max_length=500)
