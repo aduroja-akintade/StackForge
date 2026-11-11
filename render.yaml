@@ -2,17 +2,19 @@ services:
   - type: web
     name: stackforge-backend
     runtime: python
-    plan: free  # <--- ADD THIS LINE TO STAY ON THE FREE TIER
+    plan: free
     buildCommand: pip install -r backend/requirements.txt
     startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
     envVars:
       - key: GOOGLE_API_KEY
         sync: false
       - key: SUPABASE_URL
         sync: false
-      - key: SUPABASE_KEY
+      - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://stack-forge-xi.vercel.app
       - key: PYTHON_VERSION
-        value: 3.11.0
-    healthCheckPath: /health
-    autoDeploy: true
+        value: 3.11.11
