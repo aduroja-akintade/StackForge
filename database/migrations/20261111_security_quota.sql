@@ -51,4 +51,15 @@ $$;
 revoke all on function public.consume_api_quota(uuid,text,integer,date) from public, anon, authenticated;
 grant execute on function public.consume_api_quota(uuid,text,integer,date) to service_role;
 
+-- Protect the "tier" column from client-side self-upgrades.
+-- Profiles are created by the existing auth.users SECURITY DEFINER trigger.
+revoke insert, update on table public.profiles from anon, authenticated;
+grant update (username, full_name, avatar_url, website, updated_at)
+  on table public.profiles to authenticated;
+
+drop policy if exists "Public profiles are viewable by everyone." on public.profiles;
+drop policy if exists "Users can view own profile." on public.profiles;
+create policy "Users can view own profile." on public.profiles
+  for select to authenticated using (auth.uid() = id);
+
 commit;
