@@ -43,6 +43,13 @@ class SupabaseService:
             raise ValueError("Unsupported quota feature")
         if not self.client:
             raise RuntimeError("Supabase is not configured")
+        # Preserve existing paid-tier behavior while enforcing quotas for free users.
+        profile = await asyncio.to_thread(
+            lambda: self.client.table("profiles")
+            .select("tier").eq("id", user_id).maybe_single().execute()
+        )
+        if profile.data and profile.data.get("tier") == "pro":
+            return True
         now = datetime.now(timezone.utc).date()
         window = now.replace(day=1) if feature == "implement" else now
         args = {
