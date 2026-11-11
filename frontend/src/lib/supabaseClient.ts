@@ -1,10 +1,21 @@
 import { createClient } from '@supabase/supabase-js';
 
-// HARD-CODED TEST (Temporary for Proof of Concept)
-// This bypasses Vercel environment variable injection issues
-const url = "https://effxngshznsfhrqgmqpm.supabase.co";
-const key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVmZnhuZ3Noem5zZmhycWdtcXBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1OTc0NDcsImV4cCI6MjA4ODE3MzQ0N30.QsQjryd_czsIjY_vnmglvx9xAaCf0lD577xOFjmAlK4";
+// NEXT_PUBLIC_SUPABASE_ANON_KEY is intended to be public. Never expose a service-role key.
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(url, key);
+export const isSupabaseConfigured = Boolean(url && anonKey);
 
-export const isSupabaseConfigured = true;
+// Safe inert placeholders permit static builds when CI has no deployment secrets.
+// Authentication is explicitly disabled unless both environment variables exist.
+export const supabase = createClient(
+  url || 'https://example.supabase.co',
+  anonKey || 'unconfigured-public-key',
+  {
+    auth: {
+      persistSession: isSupabaseConfigured,
+      autoRefreshToken: isSupabaseConfigured,
+      detectSessionInUrl: isSupabaseConfigured,
+    },
+  }
+);
