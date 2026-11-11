@@ -91,3 +91,19 @@ stackforge/
 **Akintade** — Senior DevSecOps & Platform Engineer
 
 Built with the vision of empowering Cloud Engineers to build better, faster, and smarter.
+
+
+## Security and deployment (November 2026)
+
+The API authenticates Supabase access tokens on the server and no longer trusts
+a client-supplied `user_id`. AI endpoints enforce atomic, database-backed usage
+limits. The frontend expects environment-provided Supabase public credentials,
+while the backend requires a **server-only service-role key**.
+
+**Before merging or deploying**, run the SQL migration and configure the
+Render/Vercel environment variables as described in
+[Security and deployment checklist](docs/SECURITY_DEPLOYMENT.md).
+
+GitHub Actions validates the backend API tests, TypeScript, lint and production
+frontend build on pull requests. External cloud services require separate smoke
+testing. Do not merge until the migration and configuration checklist is complete.
