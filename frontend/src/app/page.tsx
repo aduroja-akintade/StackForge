@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { useEffect, useState } from 'react';
 
 const features = [
   {
@@ -33,23 +32,13 @@ const features = [
 
 export default function Home() {
   const { user } = useAuth();
-  const [bgImage, setBgImage] = useState('/bg2.jpeg');
-
-  // Simple effect to alternate background images every 5 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setBgImage(prev => prev === '/bg2.jpeg' ? '/bg3.jpeg' : '/bg2.jpeg');
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
   return (
     <div className="relative min-h-screen">
       {/* Custom Background for Landing Page */}
       <div 
         className="fixed inset-0 z-[-1] transition-all duration-1000 ease-in-out"
         style={{
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('${bgImage}')`,
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/background.jpeg')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundAttachment: 'fixed'
